@@ -6,6 +6,10 @@ Instructions for coding agents working in this repository.
 
 Specifications use OpenSpec (`openspec/`); its rules for this project are in `openspec/config.yaml`. To clarify a need, use `/kaizen:requirements` and `/kaizen:walkthrough`, not `openspec-explore`, which writes into the specs.
 
+## Deploying to the host
+
+The host runs the stack with `tools/deploy.sh`, never with a bare `git checkout`, `reset` or `docker compose up`. Without arguments it deploys the principal's main branch; `--test BRANCH REASON` runs a branch of the fork and needs the principal's OK in chat first. Code that writes to a device (the inverter, the heat pump) gets its independent review before it runs anywhere, on any branch.
+
 ## Kaizen standing instructions
 
 Kaizen standing instructions, version 0.6.1-dev.2: /kaizen:update brings them up to date with a newer plugin.

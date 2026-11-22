@@ -26,6 +26,8 @@ Recommended:
 - `rsync` to copy the data folder between machines, `sqlite3` to look into the databases, `curl`.
 - For a separate user that runs the stack: membership in the `docker` group (`sudo usermod -aG docker <user>`, effective at the next login). The group grants root-level access to the host.
 
+Deploy with `tools/deploy.sh` in the host's clone (cloned from `uellue/energymanager`, so `origin` is the principal's repository). Without arguments it brings the clone to `origin/main` and starts the stack. `tools/deploy.sh --test BRANCH REASON` runs a branch of the fork `uellue-bot/energymanager` instead, for a test before review. Run the script without arguments to return to main. Both refuse when the clone has local changes or commits, or when `EM_DATA_DIR` is exported with a value other than the one in `.env`. Before starting the stack, both log the time, user, commit, branch and reason in `<EM_DATA_DIR>/deploy.log`: a line there means the code was checked out, not that the stack started.
+
 ### Private-data check
 
 Every commit, including its message, is checked for private data of the site: private IP addresses, coordinates and tokens. Activate the check once per clone:
