@@ -1,0 +1,31 @@
+# The collector's latest values (change collect-device-details, E10). Kept raw:
+# what they mean during a battery calibration is to be found out.
+
+rest:
+  - resource: http://127.0.0.1:8766/status
+    scan_interval: 60
+    sensor:
+      - name: Energymanager battery state machine
+        unique_id: energymanager_battery_state_machine
+        value_template: >-
+          {% set s = value_json.state.get('power_mng.state') %}
+          {{ s.value | int if s else none }}
+      - name: Energymanager battery status raw
+        unique_id: energymanager_battery_status_raw
+        value_template: >-
+          {% set s = value_json.state.get('battery.bat_status') %}
+          {{ s.value | int if s else none }}
+      - name: Energymanager collector state read
+        unique_id: energymanager_collector_state_read
+        device_class: timestamp
+        value_template: "{{ value_json.last_success.state }}"
+      - name: Energymanager collector log read
+        unique_id: energymanager_collector_log_read
+        device_class: timestamp
+        value_template: "{{ value_json.last_success.log }}"
+      - name: Energymanager collector heat pump day
+        unique_id: energymanager_collector_heat_pump_day
+        value_template: "{{ value_json.last_success.energy_day }}"
+      - name: Energymanager collector log series pending
+        unique_id: energymanager_collector_log_series_pending
+        value_template: "{{ value_json.log.walk_pending }}"

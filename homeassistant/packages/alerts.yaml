@@ -49,6 +49,30 @@ template:
         delay_on: "00:30:00"
         state: >-
           {{ states('sensor.forecast_archive_e5') in ['unavailable', 'unknown'] }}
+      - name: Energymanager collector state missing
+        unique_id: energymanager_collector_state_missing
+        device_class: problem
+        # The sensor turns unavailable at once when the collector restarts.
+        delay_on: "00:05:00"
+        state: >-
+          {% set t = states('sensor.energymanager_collector_state_read') | as_datetime %}
+          {{ t is none or now() - t > timedelta(minutes=5) }}
+      - name: Energymanager collector log missing
+        unique_id: energymanager_collector_log_missing
+        device_class: problem
+        # The sensor turns unavailable at once when the collector restarts.
+        delay_on: "00:05:00"
+        state: >-
+          {% set t = states('sensor.energymanager_collector_log_read') | as_datetime %}
+          {{ t is none or now() - t > timedelta(hours=3) }}
+      - name: Energymanager collector heat pump periods missing
+        unique_id: energymanager_collector_heat_pump_periods_missing
+        device_class: problem
+        # The sensor turns unavailable at once when the collector restarts.
+        delay_on: "00:05:00"
+        state: >-
+          {{ now().hour >= 6 and states('sensor.energymanager_collector_heat_pump_day')
+             != (now() - timedelta(days=1)).date() | string }}
       - name: Energymanager disk nearly full
         unique_id: energymanager_disk_nearly_full
         device_class: problem
@@ -83,6 +107,27 @@ alert:
     notifiers: [energymanager]
     message: "Energymanager: the forecast archive has not answered for 30 minutes."
     done_message: "Energymanager: the forecast archive answers again."
+  energymanager_collector_state:
+    name: Inverter state not collected
+    entity_id: binary_sensor.energymanager_collector_state_missing
+    repeat: 360
+    notifiers: [energymanager]
+    message: "Energymanager: the collector has not read the inverter's state for 10 minutes."
+    done_message: "Energymanager: the collector reads the inverter's state again."
+  energymanager_collector_log:
+    name: Inverter log not collected
+    entity_id: binary_sensor.energymanager_collector_log_missing
+    repeat: 360
+    notifiers: [energymanager]
+    message: "Energymanager: the collector has not read the inverter's log for 3 hours."
+    done_message: "Energymanager: the collector reads the inverter's log again."
+  energymanager_collector_heat_pump:
+    name: Heat pump periods not collected
+    entity_id: binary_sensor.energymanager_collector_heat_pump_periods_missing
+    repeat: 1440
+    notifiers: [energymanager]
+    message: "Energymanager: yesterday's 2-hour heat pump energy was not collected; see the collector's failures."
+    done_message: "Energymanager: yesterday's 2-hour heat pump energy is collected."
   energymanager_disk:
     name: Disk nearly full
     entity_id: binary_sensor.energymanager_disk_nearly_full

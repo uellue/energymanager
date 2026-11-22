@@ -20,6 +20,14 @@ views:
             name: Battery state of charge
           - entity: sensor.rct_power_storage_battery_power
             name: Battery power (negative = charging)
+          - entity: sensor.energymanager_battery_state_machine
+            name: Battery state machine (raw, from the collector)
+            secondary_info: last-updated
+          - entity: sensor.energymanager_battery_status_raw
+            name: Battery status (raw, from the collector)
+            secondary_info: last-updated
+          - entity: sensor.energymanager_collector_state_read
+            name: Collector last read the inverter
           - entity: sensor.rct_power_storage_consumer_power
             name: Household load
           - entity: sensor.rct_power_storage_grid_power
