@@ -55,6 +55,8 @@ quiet() { local out; out="$("$@" 2>&1)" || { echo "$out" >&2; return 1; }; }
 
 umask 077
 mkdir -p "$dir/ca" "$dir/server"
+# Containers read the folder and ca.crt (README, "Collector"); the keys stay owner-only.
+chmod 755 "$dir" "$dir/ca"
 tmp="$(mktemp -d "$dir/.new.XXXXXX")"
 trap 'rm -rf -- "${tmp:?}"' EXIT
 
