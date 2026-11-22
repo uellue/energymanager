@@ -14,6 +14,9 @@ services:
       # Versioned parts of the configuration (design D3).
       - ./homeassistant/packages:/config/packages:ro
       - ./homeassistant/dashboards:/config/dashboards:ro
+      # Server certificate from tools/local_tls.sh, if the site uses HTTPS
+      # (README, "HTTPS on the home network").
+      - ${EM_DATA_DIR:?set in .env}/tls/server:/ssl:ro
 
   archive:
     build: ./archive

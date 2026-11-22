@@ -75,6 +75,25 @@ Integrations:
 
 To test how a Daikin cloud outage shows up without touching the unit, see `compose.mock-daikin-outage.yaml`.
 
+### HTTPS on the home network
+
+Optional. Home Assistant serves HTTPS with a certificate from the site's own certificate authority, so browsers show no warning once a device trusts the authority, and passwords no longer cross the network unencrypted. Options and reasons: `design/research/remote-access-https.md`.
+
+1. Create the authority and the server certificate, with every name and IPv4 address the browsers will use (here the PC's name on a FRITZ!Box network; add its LAN address too):
+   ```sh
+   tools/local_tls.sh "<EM_DATA_DIR>/tls" automation.fritz.box automation localhost 127.0.0.1
+   ```
+   The authority (`<EM_DATA_DIR>/tls/ca/`) may sign only server certificates, and only for these names, their subdomains and these IPv4 addresses; its key never leaves the host. Which browsers enforce these limits for an authority installed by hand is not verified, so treat the key like a password. `compose.yaml` mounts `<EM_DATA_DIR>/tls/server` into Home Assistant as `/ssl`; run `docker compose up -d homeassistant` after the first run.
+2. Switch Home Assistant to HTTPS. Since 2026.11 it keeps these settings in its own storage and ignores `http:` in YAML. Change them through the WebSocket API (or the user interface): `http/config/configure` with the current `stable` settings from `http/config` plus `"ssl_certificate": "/ssl/server.crt", "ssl_key": "/ssl/server.key"`. Home Assistant restarts with the new settings and reverts to the old ones after 5 minutes unless confirmed.
+3. Check: `curl --cacert "<EM_DATA_DIR>/tls/ca/ca.crt" https://automation.fritz.box:8123/` returns the page; then confirm with `http/config/promote`. Plain HTTP on port 8123 no longer answers.
+4. On each device, install `<EM_DATA_DIR>/tls/ca/ca.crt` as a trusted certificate authority, after comparing its SHA-256 fingerprint with the one the script printed. Then open https://automation.fritz.box:8123.
+   - Windows (Edge, Chrome): open the file, "Install Certificate…", "Current User", "Place all certificates in the following store": "Trusted Root Certification Authorities". To remove it: `certmgr.msc`, "Trusted Root Certification Authorities" → "Certificates", delete "energymanager home CA".
+   - Firefox: Settings → Privacy & Security → Certificates → View Certificates → Authorities → Import, "Trust this CA to identify websites".
+   - iPhone: open the file to install the profile, then switch it on under Settings → General → About → Certificate Trust Settings.
+   - Android: Settings → Security → Encryption & credentials → Install a certificate → CA certificate, then pick the file from Downloads. The file picker may not list a file that arrived through a messenger; download it in the phone's browser from a web server that sends it as `application/x-x509-ca-cert` instead, for example for a few minutes with `python3 -m http.server 8080` in a folder holding only `ca.crt` (by IP address if the phone's Private DNS cannot resolve local names). The Home Assistant app accepts the authority (Android, 2026-11-22).
+
+The server certificate is valid for 397 days. Renew it before then by running the script again with the same names, then `docker compose restart homeassistant`. The authority stays, so the devices need nothing new.
+
 ### Tests
 
 ```sh

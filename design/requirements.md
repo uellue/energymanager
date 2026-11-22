@@ -139,6 +139,7 @@ Markers per item: [answered] said or confirmed by the principal; [record] taken 
 - [answered] The project runs as its own container next to Home Assistant (Docker Compose), talking to Home Assistant over its API. An add-on wrapper follows later, for P2 users on Home Assistant OS.
 - [answered] Docker Engine from Docker's Debian repository, inside WSL (Debian 13) for prototyping, and the same on the mini PC.
 - [answered] The pilot runs on the automation PC (Debian 13) since 2026-11-22.
+- [answered] Access from the phone, at home and on the road, without browser warnings and without credentials crossing the home network unencrypted (principal, 2026-11-22). Remote access through a VPN, not an open port. HTTPS for now from an own certificate authority; Tailscale is the simpler fallback. Options and reasons: `design/research/remote-access-https.md`.
 ### 2.5 Availability and reliability
 - [answered] Requirement: high error tolerance, or a safe fallback and an alert. The specific fallback behaviour is not fixed yet ("I would not fix the specific behavior yet").
 - [answered] If an automatic fallback to the unit's current independent operation is not possible, the project can coach the user to set the correct fallback in the unit's programming screen. [deferred] The details wait for the heat pump's handbook, which the principal will provide.
