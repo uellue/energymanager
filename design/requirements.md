@@ -138,6 +138,7 @@ Markers per item: [answered] said or confirmed by the principal; [record] taken 
 - [answered] Storage, for later refinement ("Not now, just keeping note"; principal, 2026-11-21): the data must not overflow the site's storage; it uses a format efficient in size and in speed of reading and processing; and it keeps a reasonable density over reasonable time frames, e.g. lower-density aggregates for long lookback. For the pilot, purging stays off and the database's growth is measured after a week ("Large is relative these days").
 - [answered] The project runs as its own container next to Home Assistant (Docker Compose), talking to Home Assistant over its API. An add-on wrapper follows later, for P2 users on Home Assistant OS.
 - [answered] Docker Engine from Docker's Debian repository, inside WSL (Debian 13) for prototyping, and the same on the mini PC.
+- [answered] The pilot runs on the automation PC (Debian 13) since 2026-11-22.
 ### 2.5 Availability and reliability
 - [answered] Requirement: high error tolerance, or a safe fallback and an alert. The specific fallback behaviour is not fixed yet ("I would not fix the specific behavior yet").
 - [answered] If an automatic fallback to the unit's current independent operation is not possible, the project can coach the user to set the correct fallback in the unit's programming screen. [deferred] The details wait for the heat pump's handbook, which the principal will provide.
