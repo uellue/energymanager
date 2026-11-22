@@ -18,3 +18,4 @@ What people said about working with the agents and the plugin, positive and nega
 - 2026-11-22 | neutral | safety | An agent with SSH to a bot account on a remote machine may have no larger blast radius than running locally or in a VM, if the machine is not critical and the account cannot reach credentials | effect: note for the next debrief
 - 2026-11-22 | neutral | safety | How far to trust agents compared with packages from PyPI, which are more verifiable but also rarely verified | effect: note for the next debrief
 - 2026-11-22 | positive | messages | Message length OK | effect: Message size line
+- 2026-11-22 | positive | debrief | The debrief caught what slipped through the cracks; it should be done regularly | effect: none yet (cadence to agree)
