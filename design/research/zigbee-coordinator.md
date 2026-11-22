@@ -34,7 +34,31 @@ Provenance: research by a sub-agent on 2026-11-21 from the Home Assistant ZHA an
 
 Verdict: reflashing is documented and works, but the bridge stays on Wi-Fi, which both projects advise against. Fine as a free trial coordinator for the first sensor, not for the long term.
 
+## ZBT-1 and ZBT-2
+
+Added on 2026-11-22 from the ZBT-2 page (https://www.home-assistant.io/connect/zbt-2), the ZBT-1 page (https://www.home-assistant.io/skyconnect/; `/connect/zbt-1` returns 404) and the ZHA page, read that day by a sub-agent; quotes as reported. The ZBT-1 was earlier sold as SkyConnect.
+
+| | ZBT-1 | ZBT-2 |
+|---|---|---|
+| Radio | Silicon Labs EFR32MG21 | Silicon Labs MG24 |
+| USB-serial chip | CP2102N | ESP32-S3 |
+| Serial speed | 115200 baud | 460800 baud ("4x Faster") |
+| Antenna | "Small and internal" (ZBT-2 page) | separate base with antenna, peak gain 4.16 dBi |
+| Protocols | Zigbee 3.0, or Thread by firmware update; "Multiprotocol will remain an experimental feature and is not recommended for use." | Zigbee 3.0 or Thread; "cannot do both Zigbee and Thread simultaneously" |
+| Connector | "USB 2.0 full-speed", plug type not stated | USB-C, 1.5 m cable included |
+| Price | not stated | MSRP €45 incl. tax, $49 |
+| Status | "no longer in production, but continues to receive software updates" | current model |
+
+- Both use EmberZNet; ZHA lists both under `ezsp`.
+- The ZBT-2 page credits the MG24 with "faster operation and sensitivity for weak signals" and the higher baud rate with better device responsiveness. Neither page gives a range figure.
+- Transmit power is "up to +20 dBm" for the ZBT-1 and "10 dBm (Europe) 8 dBm (rest of world)" for the ZBT-2. The figures come from different spec tables and are no range comparison.
+- ZBT-1 units sold June to October 2024 had a faulty part; a replacement program runs for "60 months (effective October 2, 2024) for verified purchases."
+
+Verdict: a ZBT-1 is only worth taking if it comes cheap or free. Like the ZBT-2, it needs usbipd on WSL2.
+
 ## Summary
+
+- **Decision (principal, 2026-11-22):** a ZBT-2, ordered. It goes into a USB port of the automation PC, on its included 1.5 m cable; keeping the antenna away from USB 3 ports and the PC is common advice against interference (not checked for the ZBT-2).
 
 - **Recommendation:** an Ethernet/PoE coordinator from the SLZB-06 family, preferably the EmberZNet SLZB-06Mg24U, connected by cable, never over its Wi-Fi fallback. It avoids usbipd on WSL2, moves to the Debian mini PC without change, can sit away from the server, and ZHA (discovery tested) and Zigbee2MQTT (listed) both support it. The TubesZB EFR32 MGM24 PoE ($76.00) is the alternative with a stated price.
 - **Strongest counter-argument:** ZHA recommends only the ZBT-2, the cheapest new option (€45). On the Debian mini PC a USB stick on an extension cable needs no usbipd, so the network coordinator mainly solves the WSL2 period and adds firmware to maintain.

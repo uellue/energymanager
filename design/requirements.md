@@ -79,6 +79,7 @@ Markers per item: [answered] said or confirmed by the principal; [record] taken 
 - [answered] The floor's rate-of-change limit for the pilot is set at 10 °C in 2 h (2.11). Other sites need their own value; how they obtain it is open.
 - [answered] A wood stove with a water jacket is planned in the pilot. It would be a second heat source for the storage tank, which the model then has to account for. [deferred] Measured by a sensor, later, "if possible without any routine human interaction"; "we get there when we get there".
 - [answered] Which sources of information exist and which can be used "is still to be settled from iterating on requirements and specs". One candidate is a Zigbee thermometer the principal can set up.
+- [answered] Zigbee coordinator: the principal ordered a Home Assistant Connect ZBT-2 (USB) on 2026-11-22, for the room thermometer. It goes on the automation PC, which needs no usbipd. Research: `design/research/zigbee-coordinator.md`.
 - [answered] The forecast.solar estimate is "not very accurate". [unknown] How large the error is, and whether the optimizer must correct it with measured production.
 ### 2.3 Interfaces with existing systems
 
