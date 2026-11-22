@@ -1,0 +1,114 @@
+# The site's dashboard (spec: dashboard; examples E1, E2, E5). Refers to
+# entities only, never to site-specific values.
+title: Energymanager
+views:
+  - title: Overview
+    path: overview
+    cards:
+      - type: entities
+        title: Now
+        entities:
+          - entity: sensor.altherma_climatecontrol_aussentemperatur
+            name: Outdoor (Daikin)
+          - entity: sensor.altherma_climatecontrol_austrittswasser_temperatur
+            name: Leaving water (floor, or tank while heating it)
+          - entity: sensor.altherma_domestichotwatertank_tanktemperatur
+            name: Hot-water tank
+          - entity: sensor.rct_power_storage_all_generators_power
+            name: Solar power
+          - entity: sensor.battery_at_rct_power_storage_battery_state_of_charge
+            name: Battery state of charge
+          - entity: sensor.rct_power_storage_battery_power
+            name: Battery power (negative = charging)
+          - entity: sensor.rct_power_storage_consumer_power
+            name: Household load
+          - entity: sensor.rct_power_storage_grid_power
+            name: Grid power
+          - entity: sensor.altherma_climatecontrol_taglicher_stromverbrauch_heizung
+            name: Heat pump today, heating
+          - entity: sensor.altherma_domestichotwatertank_taglicher_stromverbrauch_heizung
+            name: Heat pump today, hot water
+          - entity: sensor.rct_power_storage_grid_energy_consumption_day
+            name: Grid import today
+          - entity: sensor.rct_power_storage_grid_energy_production_day
+            name: Grid export today (negative)
+
+      - type: history-graph
+        title: Temperatures, 48 h
+        hours_to_show: 48
+        entities:
+          - entity: sensor.altherma_climatecontrol_aussentemperatur
+            name: Outdoor
+          - entity: sensor.altherma_climatecontrol_austrittswasser_temperatur
+            name: Leaving water (floor or tank)
+          - entity: sensor.altherma_domestichotwatertank_tanktemperatur
+            name: Hot-water tank
+
+      - type: history-graph
+        title: Electricity, 48 h
+        hours_to_show: 48
+        entities:
+          - entity: sensor.rct_power_storage_all_generators_power
+            name: Solar
+          - entity: sensor.rct_power_storage_consumer_power
+            name: Household load
+          - entity: sensor.rct_power_storage_grid_power
+            name: Grid
+          - entity: sensor.rct_power_storage_battery_power
+            name: Battery
+
+      - type: history-graph
+        title: Battery state of charge, 48 h
+        hours_to_show: 48
+        entities:
+          - entity: sensor.battery_at_rct_power_storage_battery_state_of_charge
+            name: State of charge
+
+      - type: entities
+        title: Solar forecast (forecast.solar)
+        entities:
+          - entity: sensor.power_production_now
+            name: Power now
+          - entity: sensor.energy_current_hour
+            name: This hour
+          - entity: sensor.energy_next_hour
+            name: Next hour
+          - entity: sensor.energy_production_today_remaining
+            name: Rest of today
+          - entity: sensor.energy_production_tomorrow
+            name: Tomorrow
+
+      - type: weather-forecast
+        entity: weather.home_2
+        name: Weather (Open-Meteo)
+        forecast_type: hourly
+
+      # E5: measured production against the solar forecast and the weather-based
+      # upper estimate (irradiance on the roof plane x kWp, design D6), per hour.
+      - type: custom:apexcharts-card
+        header:
+          show: true
+          title: Production against forecasts, 7 days (Wh per hour)
+        graph_span: 7d
+        span:
+          end: hour
+        series:
+          - entity: sensor.rct_power_storage_all_generators_power
+            name: Measured
+            type: column
+            statistics:
+              type: mean
+              period: hour
+              align: start
+          - entity: sensor.forecast_archive_e5
+            name: Solar forecast
+            type: line
+            data_generator: |
+              return entity.attributes.hours.map(
+                h => [new Date(h.start).getTime(), h.solar_forecast_wh]);
+          - entity: sensor.forecast_archive_e5
+            name: Weather-based (upper estimate)
+            type: line
+            data_generator: |
+              return entity.attributes.hours.map(
+                h => [new Date(h.start).getTime(), h.weather_estimate_wh]);

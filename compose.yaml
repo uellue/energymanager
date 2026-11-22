@@ -1,0 +1,33 @@
+name: energymanager
+
+services:
+  homeassistant:
+    image: ghcr.io/home-assistant/home-assistant:2026.11.2
+    restart: unless-stopped
+    # Host networking: reaches the inverter on the home network and the archive
+    # on 127.0.0.1 (design D1). The web interface is on port 8123.
+    network_mode: host
+    environment:
+      TZ: Europe/Berlin
+    volumes:
+      - ${EM_DATA_DIR:?set in .env}/homeassistant:/config
+      # Versioned parts of the configuration (design D3).
+      - ./homeassistant/packages:/config/packages:ro
+      - ./homeassistant/dashboards:/config/dashboards:ro
+
+  archive:
+    build: ./archive
+    restart: unless-stopped
+    # Host networking: the endpoint binds to 127.0.0.1 of this machine, where
+    # Home Assistant reaches it and the home network does not (design D8).
+    network_mode: host
+    environment:
+      EM_LATITUDE: ${EM_LATITUDE:?set in .env}
+      EM_LONGITUDE: ${EM_LONGITUDE:?set in .env}
+      EM_DECLINATION: ${EM_DECLINATION:?set in .env}
+      EM_AZIMUTH: ${EM_AZIMUTH:?set in .env}
+      EM_KWP: ${EM_KWP:?set in .env}
+      EM_ARCHIVE_PORT: ${EM_ARCHIVE_PORT:-8765}
+      EM_ARCHIVE_DB: /data/forecasts.sqlite
+    volumes:
+      - ${EM_DATA_DIR:?set in .env}/forecasts:/data

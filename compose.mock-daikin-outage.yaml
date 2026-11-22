@@ -1,0 +1,16 @@
+# Mock a Daikin cloud outage without touching the unit (example E8, design D10).
+#
+# Maps the Onecta cloud's host names to 192.0.2.1, an address reserved for
+# documentation that nothing answers, so every call times out as in a real
+# outage. Switching it on or off recreates the Home Assistant container: all
+# sources then have a gap of about a minute.
+#
+#   on:  docker compose -f compose.yaml -f compose.mock-daikin-outage.yaml up -d homeassistant
+#   off: docker compose up -d homeassistant
+#
+# Host names taken from daikin-onecta 0.6.2 and daikin_onecta v5.0.4.
+services:
+  homeassistant:
+    extra_hosts:
+      - "api.onecta.daikineurope.com:192.0.2.1"
+      - "idp.onecta.daikineurope.com:192.0.2.1"

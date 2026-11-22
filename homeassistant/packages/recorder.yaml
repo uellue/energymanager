@@ -1,0 +1,9 @@
+# Keep every measurement indefinitely, at the rate each source delivers
+# (requirements 2.4, design D4). The model downsamples; the database's growth is
+# measured after a week. Entities nobody needs are excluded here once known.
+recorder:
+  auto_purge: false
+  exclude:
+    entities:
+      # A copy of the forecast archive, which keeps the forecasts itself.
+      - sensor.forecast_archive_e5

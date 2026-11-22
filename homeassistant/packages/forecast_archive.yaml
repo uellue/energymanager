@@ -1,0 +1,12 @@
+# Reads the forecast archive's hourly series for the comparison of production
+# against both forecasts (example E5, design D8). The series lives in the
+# attribute `hours`; the sensor itself is not recorded (see recorder.yaml).
+rest:
+  - resource: http://127.0.0.1:8765/e5?days=7
+    scan_interval: 900
+    sensor:
+      - name: Forecast archive E5
+        unique_id: energymanager_forecast_archive_e5
+        value_template: "{{ value_json.hours | length }}"
+        json_attributes:
+          - hours
