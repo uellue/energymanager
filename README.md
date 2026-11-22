@@ -158,8 +158,33 @@ Optional. Home Assistant serves HTTPS with a certificate from the site's own cer
 
 The server certificate is valid for 397 days. Renew it before then by running the script again with the same names, then `docker compose restart homeassistant`. The authority stays, so the devices need nothing new.
 
+### Collector
+
+Records what the inverter and the heat pump hold beyond Home Assistant's entities, in an SQLite database outside the repository (`<EM_DATA_DIR>/collector/collector.sqlite`; why: `design/research/rct-onecta-data.md`):
+
+- every minute, the inverter's battery and inverter state objects, raw (`power_mng.state`, `battery.bat_status`, `battery.status`, `battery.status2`, `prim_sm.state`), to find out how a battery calibration shows (E10);
+- the inverter's own logs (5-minute, daily, monthly and yearly series), first back to their oldest entry, then the newest entries every hour (E11);
+- once a day after 03:00, yesterday's twelve 2-hour periods of the heat pump's electrical energy, for space heating and hot water, taken from the Daikin Onecta integration's diagnostics in Home Assistant, with no call to the Daikin cloud (E12).
+
+**The one write to a device.** Reading the inverter's logs means writing a timestamp to a `logger.*` object, which the inverter answers with the entries logged before it. The code refuses any other write (requirements 2.3). Log timestamps follow the inverter's clock, which need not be UTC (on 2026-11-22 it ran on summer time, UTC+2); every query also stores that clock against the host's (table `clock`).
+
+The inverter answers one client at a time and cuts answers when another client asks at once. The collector therefore reads one log query every 10 s, retries cut answers, and pauses the logs while the integration's household load in Home Assistant is not current.
+
+1. Add to `.env`: the inverter's address `EM_RCT_HOST` (as in the RCT Power integration), and Home Assistant's API: `EM_HA_URL` and `HA_TOKEN` (a long-lived token: profile → Security). With "HTTPS on the home network": `EM_HA_URL=https://localhost:8123` and `EM_HA_CAFILE=/tls/ca.crt`.
+2. Create the data folder for the container's user: `mkdir -p "<EM_DATA_DIR>/collector"`, then `docker compose run --rm --no-deps --user 0 --entrypoint chown collector 1000:1000 /data`.
+3. Start: `docker compose up -d --build collector`
+4. Check: `curl -s http://127.0.0.1:8766/status` shows the state values with their time, the last log read, the latest stored heat pump day, and how many log series are still being walked back. On the dashboard, "Battery state machine" and "Battery status" have values within 2 minutes. `homeassistant/packages/alerts.yaml` raises an alert when the state is not read for 10 minutes, the log for 3 hours, or yesterday's heat pump periods are missing at 06:00.
+
+Failures are kept in table `failure` (part `state`, `log` or `energy`). The Daikin integration's diagnostics are not a stable interface; when an update changes them, nothing is stored for that day and the alert says so.
+
 ### Tests
 
 ```sh
 python3 -I -m unittest discover -s tests
+```
+
+The collector's tests need `rctclient` and are skipped without it. To run them in the collector's image:
+
+```sh
+docker compose run --rm --no-deps -v "$PWD:/repo:ro" collector python3 -B -m unittest discover -s /repo/tests -p test_collector.py
 ```

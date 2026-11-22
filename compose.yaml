@@ -34,3 +34,25 @@ services:
       EM_ARCHIVE_DB: /data/forecasts.sqlite
     volumes:
       - ${EM_DATA_DIR:?set in .env}/forecasts:/data
+
+  collector:
+    build: ./collector
+    restart: unless-stopped
+    # Host networking: reaches the inverter on the home network; the endpoint
+    # binds to 127.0.0.1, where Home Assistant reads it (design C8).
+    network_mode: host
+    environment:
+      EM_RCT_HOST: ${EM_RCT_HOST:?set in .env}
+      EM_RCT_PORT: ${EM_RCT_PORT:-8899}
+      EM_COLLECTOR_PORT: ${EM_COLLECTOR_PORT:-8766}
+      EM_COLLECTOR_DB: /data/collector.sqlite
+      TZ: Europe/Berlin
+      # Home Assistant's API, for the Daikin diagnostics and to pause log reads
+      # while the integration's values stop (design C5, C7).
+      EM_HA_URL: ${EM_HA_URL:-http://localhost:8123}
+      EM_HA_CAFILE: ${EM_HA_CAFILE:-}
+      HA_TOKEN: ${HA_TOKEN:?set in .env}
+    volumes:
+      - ${EM_DATA_DIR:?set in .env}/collector:/data
+      # The home certificate authority, if the site uses HTTPS (README).
+      - ${EM_DATA_DIR:?set in .env}/tls/ca:/tls:ro
