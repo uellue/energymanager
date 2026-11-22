@@ -101,6 +101,7 @@ Markers per item: [answered] said or confirmed by the principal; [record] taken 
     - The inverter also has the calibration interval (`power_mng.bat_calib_reqularity`) and charge power (`power_mng.calib_charge_power`) as readable objects; the integration does not expose them.
 - [answered] Electric vehicles: an electric scooter and an Ape (three-wheeled electric vehicle, 45 km/h). No wallbox; charged from a wall socket with a timer at about 800 W.
 - [answered] First stage: no writes to devices; simulations instead (see 2.11). The model and its simulation are the stand-in for the real house.
+  - [answered] One exception (principal, 2026-11-22): reading the inverter's own logs (`logger.*` objects) needs a WRITE frame carrying a timestamp, which `rctclient`'s command line sends as a query (RCT does not document the protocol). These query frames are allowed, for `logger.*` objects only; no other write to any device. Background: `design/research/rct-onecta-data.md`.
 - [answered] Heat pump power: the principal knows the unit collects this and would rather read it from the unit than add a meter. They heard of a USB device that goes into the installer data port. Research of 2026-11-21 (`design/research/daikin-local-readout.md`):
   - The unit is a Daikin Altherma 3 R ECH₂O.
   - The installer USB cable (EKPCCAB4) only updates software.
