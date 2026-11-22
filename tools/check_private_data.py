@@ -32,6 +32,10 @@ SECRET_ASSIGNMENT = re.compile(
     r"[\w-]*[\"']?\s*[:=]\s*[\"']?(?![$<])([^\s\"']+)"
 )
 PASSWORD_KEY = re.compile(r"(?i)passw")
+# The shape of the RCT inverter's and battery's serial numbers (4 digits, a
+# letter, 9 digits), as Home Assistant's device registry shows them. A serial
+# can be enough to claim a device in a vendor's cloud.
+DEVICE_SERIAL = re.compile(r"(?<!\w)\d{4}[A-Za-z]\d{9}(?!\w)")
 
 
 def is_secret_value(match):
@@ -55,6 +59,8 @@ def find_kinds(text):
     if (JWT.search(text) or BEARER.search(text)
             or any(is_secret_value(m) for m in SECRET_ASSIGNMENT.finditer(text))):
         kinds.append("token")
+    if DEVICE_SERIAL.search(text):
+        kinds.append("device serial number")
     return kinds
 
 

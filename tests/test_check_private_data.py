@@ -64,6 +64,12 @@ class FindKinds(unittest.TestCase):
         self.assertEqual(find_kinds("MQTT_PASSWORD=" + "hunter2hunter"), ["token"])
         self.assertEqual(find_kinds("Authorization: Bearer " + "a8f3k2l9q0w8e7r6t5y4"), ["token"])
 
+    def test_device_serial(self):
+        """A made-up value in the shape of an RCT serial number (debrief 2026-11-22)."""
+        self.assertEqual(find_kinds("serial_number: " + "1234" + "X" + "567890123"), ["device serial number"])
+        for text in ("ID 1234X56789012", "1234X5678901234", "A1234X567890123", "sha 12345678901234"):
+            self.assertEqual(find_kinds(text), [], text)
+
 
 class Hook(unittest.TestCase):
     """Runs the script on staged changes in a throwaway repository."""
