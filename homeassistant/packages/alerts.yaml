@@ -1,0 +1,99 @@
+# Alerts when a source stops delivering (E9: "the person is alerted"), and for
+# the host's disk and HTTPS certificate.
+# Notifications go to the notify group "energymanager", which the site defines
+# in configuration.yaml (README, "Alerts").
+
+command_line:
+  - sensor:
+      name: Energymanager disk used
+      unique_id: energymanager_disk_used
+      command: >-
+        python3 -c "import shutil; u = shutil.disk_usage('/config');
+        print(round(100 * u.used / u.total, 1))"
+      unit_of_measurement: "%"
+      scan_interval: 900
+  - sensor:
+      # Unavailable when the site does not use HTTPS (no /ssl/server.crt).
+      name: Energymanager certificate expiry
+      unique_id: energymanager_certificate_expiry
+      command: >-
+        python3 -c "from cryptography import x509;
+        print(x509.load_pem_x509_certificate(open('/ssl/server.crt', 'rb').read())
+        .not_valid_after_utc.isoformat())"
+      device_class: timestamp
+      scan_interval: 21600
+
+template:
+  - binary_sensor:
+      # A source counts as missing when it is unavailable or has not reported
+      # for longer than its polling interval allows; delay_on adds 5 minutes.
+      - name: Energymanager inverter missing
+        unique_id: energymanager_inverter_missing
+        device_class: problem
+        delay_on: "00:05:00"
+        state: >-
+          {% set s = states.sensor.rct_power_storage_consumer_power %}
+          {{ s is none or s.state in ['unavailable', 'unknown']
+             or now() - s.last_reported > timedelta(minutes=5) }}
+      - name: Energymanager heat pump missing
+        unique_id: energymanager_heat_pump_missing
+        device_class: problem
+        delay_on: "00:05:00"
+        state: >-
+          {% set s = states.sensor.altherma_climatecontrol_aussentemperatur %}
+          {{ s is none or s.state in ['unavailable', 'unknown']
+             or now() - s.last_reported > timedelta(minutes=40) }}
+      - name: Energymanager forecast archive missing
+        unique_id: energymanager_forecast_archive_missing
+        device_class: problem
+        delay_on: "00:30:00"
+        state: >-
+          {{ states('sensor.forecast_archive_e5') in ['unavailable', 'unknown'] }}
+      - name: Energymanager disk nearly full
+        unique_id: energymanager_disk_nearly_full
+        device_class: problem
+        state: >-
+          {{ states('sensor.energymanager_disk_used') | float(0) > 90 }}
+      - name: Energymanager certificate expiring
+        unique_id: energymanager_certificate_expiring
+        device_class: problem
+        state: >-
+          {% set t = states('sensor.energymanager_certificate_expiry') | as_datetime %}
+          {{ t is not none and t - now() < timedelta(days=30) }}
+
+alert:
+  energymanager_inverter:
+    name: Inverter values missing
+    entity_id: binary_sensor.energymanager_inverter_missing
+    repeat: 360
+    notifiers: [energymanager]
+    message: "Energymanager: no inverter values for 10 minutes."
+    done_message: "Energymanager: inverter values are back."
+  energymanager_heat_pump:
+    name: Heat pump values missing
+    entity_id: binary_sensor.energymanager_heat_pump_missing
+    repeat: 360
+    notifiers: [energymanager]
+    message: "Energymanager: no heat pump values for 45 minutes."
+    done_message: "Energymanager: heat pump values are back."
+  energymanager_forecast_archive:
+    name: Forecast archive unreachable
+    entity_id: binary_sensor.energymanager_forecast_archive_missing
+    repeat: 360
+    notifiers: [energymanager]
+    message: "Energymanager: the forecast archive has not answered for 30 minutes."
+    done_message: "Energymanager: the forecast archive answers again."
+  energymanager_disk:
+    name: Disk nearly full
+    entity_id: binary_sensor.energymanager_disk_nearly_full
+    repeat: 1440
+    notifiers: [energymanager]
+    message: "Energymanager: the disk is more than 90 % full."
+    done_message: "Energymanager: disk space is fine again."
+  energymanager_certificate:
+    name: HTTPS certificate expiring
+    entity_id: binary_sensor.energymanager_certificate_expiring
+    repeat: 1440
+    notifiers: [energymanager]
+    message: "Energymanager: the HTTPS certificate expires within 30 days; run tools/local_tls.sh (README)."
+    done_message: "Energymanager: the HTTPS certificate was renewed."

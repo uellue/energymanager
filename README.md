@@ -75,6 +75,70 @@ Integrations:
 
 To test how a Daikin cloud outage shows up without touching the unit, see `compose.mock-daikin-outage.yaml`.
 
+### Alerts
+
+Two layers. Home Assistant watches the sources and the host and sends a push to the phone (`homeassistant/packages/alerts.yaml`); an external service notices when Home Assistant or the whole host stops (a dead man's switch).
+
+Alerts from Home Assistant, each repeated every 6 or 24 hours until resolved, with a message when it is:
+
+| Alert | When |
+|---|---|
+| Inverter values missing | no value from `sensor.rct_power_storage_consumer_power` for 10 minutes |
+| Heat pump values missing | no value from `sensor.altherma_climatecontrol_aussentemperatur` for 45 minutes (Onecta polls every 10 or 30 minutes) |
+| Forecast archive unreachable | the archive's endpoint has not answered for 30 minutes |
+| Disk nearly full | more than 90 % of the disk holding the configuration in use |
+| HTTPS certificate expiring | less than 30 days left (only with "HTTPS on the home network") |
+
+1. Install the Home Assistant app on the phone and log in; it registers a notify service `notify.mobile_app_<device>` (Developer tools → Actions lists it).
+2. Add to `<EM_DATA_DIR>/homeassistant/configuration.yaml`, with that service, and restart:
+   ```yaml
+   notify:
+     - platform: group
+       name: energymanager
+       services:
+         - service: mobile_app_<device>
+   ```
+3. Check: Developer tools → Actions → `notify.energymanager` with a message arrives on the phone; Settings → Entities lists five `alert.energymanager_*`, all "Idle".
+
+Dead man's switch, with healthchecks.io (free plan "Hobbyist", 20 checks; open source, could be self-hosted on another machine):
+
+1. Create a check with period 5 minutes and grace time 10 minutes, and an email integration. Copy its ping URL.
+2. Add to `<EM_DATA_DIR>/homeassistant/secrets.yaml` (the URL is the only secret; it stays on the host):
+   ```yaml
+   healthchecks_ping_url: https://hc-ping.com/<uuid>
+   healthchecks_fail_url: https://hc-ping.com/<uuid>/fail
+   ```
+3. Add to `configuration.yaml` and restart:
+   ```yaml
+   rest_command:
+     energymanager_ping:
+       url: !secret healthchecks_ping_url
+       method: post
+     energymanager_ping_fail:
+       url: !secret healthchecks_fail_url
+       method: post
+
+   automation energymanager:
+     - alias: Energymanager heartbeat
+       id: energymanager_heartbeat
+       triggers:
+         - trigger: time_pattern
+           minutes: "/5"
+       actions:
+         - if:
+             - condition: template
+               value_template: >-
+                 {{ states.binary_sensor
+                    | selectattr('entity_id', 'search', '^binary_sensor\.energymanager_')
+                    | selectattr('state', 'eq', 'on') | list | count > 0 }}
+           then:
+             - action: rest_command.energymanager_ping_fail
+           else:
+             - action: rest_command.energymanager_ping
+   ```
+   Home Assistant reports every 5 minutes. healthchecks.io emails when reports stop for 15 minutes (host or Home Assistant down), and when an alert from the table above is active, so problems also arrive by email.
+4. Check: the check turns "up" in healthchecks.io within 5 minutes.
+
 ### HTTPS on the home network
 
 Optional. Home Assistant serves HTTPS with a certificate from the site's own certificate authority, so browsers show no warning once a device trusts the authority, and passwords no longer cross the network unencrypted. Options and reasons: `design/research/remote-access-https.md`.
