@@ -1,0 +1,36 @@
+# Private kaizen records (debrief reports, reply drafts)
+.claude/debriefs/
+.claude/drafts/
+
+# Site-specific settings and secrets (see .env.example)
+.env
+
+# Recorded data belongs in EM_DATA_DIR, outside the repository
+*.sqlite
+*.sqlite-*
+*.db
+*.db-*
+
+# Python, tests and tools (after LiberTEM/LiberTEM's .gitignore)
+__pycache__
+*.pyc
+*.egg-info
+build
+dist
+.tox
+.pytest_cache
+.mypy_cache/
+htmlcov
+coverage.xml
+.coverage*
+junit.xml
+.ipynb_checkpoints/
+node_modules
+
+# Editors and operating systems
+*.swp
+.vscode
+.vscode-server
+*.idea
+*Thumbs.db
+*.DS_Store
