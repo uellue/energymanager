@@ -4,6 +4,7 @@ What leaves a debrief: proposals with decisions, the fate of earlier ones, what 
 
 Public: yes, since 2026-11-22 (github.com/uellue/energymanager); asked 2026-11-21, decided 2026-11-22.
 Message size: OK ("7 message length is OK!"), asked 2026-11-22; earlier "a bit on the long side perhaps" (2026-11-21).
+Debrief cadence: offered when a stretch of work winds down ("so far the debrief suggestions came right at the correct moment"), 2026-11-22.
 
 ## Proposals
 ### 2026-11-21 (first debrief: setup, requirements, walk-through S1)
@@ -22,14 +23,14 @@ Message size: OK ("7 message length is OK!"), asked 2026-11-22; earlier "a bit o
 ### 2026-11-22 (S1 build, publication on GitHub, issues as a channel)
 | # | Proposal | Destination | Effort | Decision / status |
 |---|---|---|---|---|
-| 1 | Test that `.claude/settings.json` sends every tool the GitHub text guard checks to it (the tests checked the script, not its wiring) | project (test, settings) | small | accepted 2026-11-22; done on branch `hook-monitor-matcher`, awaiting merge |
+| 1 | Test that `.claude/settings.json` sends every tool the GitHub text guard checks to it (the tests checked the script, not its wiring) | project (test, settings) | small | accepted 2026-11-22; done, merged 2026-11-22 |
 | 2 | Write the procedure for a repository worked by a bot: enrolling the repository and the bot account, token limits (no PRs or issues upstream), the trust rule (only the principal's text counts; hook), issues as a channel, PRs via compare link, rebuilding the history by area, the scan before publication. Once a second repository has gone through it: a skill | project doc, then a plugin (see uellue-bot/skills#3) | medium | accepted 2026-11-22: added to uellue-bot/skills#3 as a comment (receiving end of issues, coordination of parallel threads) |
 | 3 | The automation PC runs only merged code: a deploy command there that refuses anything but `upstream/main`; code that writes to devices is reviewed before it is deployed | project (script, README) | small | open |
 | 4 | Never ask for approval of a proposal or command "as proposed" or "from above" unless it is in a message the person has seen; quote or link it | kaizen standing instructions | small | 2026-11-22: folded into row 2 as part of a coordination layer for parallel threads (the principal: a meta issue) |
 | 5 | Enforce a cost ceiling with a tool: a command that reports the session's spend at list price so far, run at each task group | kaizen plugin (usage script) | medium | 2026-11-22: folded into row 2 (coordination layer) |
 | 6 | Decide whether the private-data check should still cover serial-number patterns (2026-11-21 row 4) | project | small | open |
-| 7 | The private-data check refuses editor swap and lock files and `__pycache__` by name, so staging everything at once cannot publish them | project (`tools/check_private_data.py`) | small | open |
-| 8 | Update the agent memory on approvals from the principal: the hook exists, authors are read through `tools/gh_thread.py`, drop the link to a memory that does not exist | agent memory | small | open |
+| 7 | The private-data check refuses editor swap and lock files and `__pycache__` by name, so staging everything at once cannot publish them | project (`tools/check_private_data.py`) | small | declined 2026-11-22 (no second layer): `.gitignore` covers them; the habit of staging by name went to agent memory |
+| 8 | Update the agent memory on approvals from the principal: the hook exists, authors are read through `tools/gh_thread.py`, drop the link to a memory that does not exist | agent memory | small | done 2026-11-22 |
 | 9 | Capture "note for the debrief" without loading the whole debrief skill | kaizen plugin | small | open |
 
 Declined 2026-11-22: pinning Python packages by hash and container images by digest ("let's not get paranoid").
