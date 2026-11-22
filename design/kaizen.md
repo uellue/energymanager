@@ -2,7 +2,7 @@
 
 What leaves a debrief: proposals with decisions, the fate of earlier ones, what did not fit in the plugin's skills, and notes for the next debrief. The full reports are private, in `.claude/debriefs/`.
 
-Public: may become (private for now), asked 2026-11-21.
+Public: yes, since 2026-11-22 (github.com/uellue/energymanager); asked 2026-11-21, decided 2026-11-22.
 Message size: comfortable, a bit long ("Was about right. A bit on the long side perhaps."), asked 2026-11-21.
 
 ## Proposals
@@ -27,3 +27,4 @@ Message size: comfortable, a bit long ("Was about right. A bit on the long side 
 
 ## Notes for the next debrief
 - 2026-11-21: first rollout of kaizen 0.6.1-dev.2; no issue tracker yet, so no first look at issues (the first `/kaizen:sync` starts from here once a tracker exists).
+- 2026-11-22, the principal: record the procedure for creating a new repository worked on by a bot, and for enrolling the bot account, as a reusable procedure; they will nearly always work this way. As done here: the principal owns the repository and creates it; the bot account forks it and works only in the fork, through pull requests; `gh` logged in with the bot's fine-grained token (stored in `~/.config/gh/hosts.yml`, unencrypted under WSL); push to the principal's repository switched off in the clone (`git remote set-url --push upstream …`); commits with the principal's name and a bot email address; before the first publication, the whole history checked for private data (site location, public IP, tokens, LAN addresses, stray files such as editor lock files and `__pycache__`), and commits restructured by area for review; rebase merge. Open points: a fine-grained token may not be able to open pull requests on the principal's repository; a repository that starts with a licence commit needs the local history rebased onto it.
