@@ -105,6 +105,17 @@ class HookTest(unittest.TestCase):
         """review: the Monitor tool runs shell commands too."""
         self.assertIsNotNone(guard.decide(payload("gh api repos/o/r/issues/3/comments", "Monitor")))
 
+    def test_settings_send_every_checked_tool_to_the_hook(self):
+        """The matcher in .claude/settings.json decides which calls reach the script at all.
+
+        Monitor was checked by the script but missing from the matcher (found 2026-11-22).
+        """
+        settings = json.loads((ROOT / ".claude" / "settings.json").read_text())
+        matchers = [entry["matcher"] for entry in settings["hooks"]["PreToolUse"]
+                    if any("guard_github_text.py" in h["command"] for h in entry["hooks"])]
+        self.assertEqual(len(matchers), 1)
+        self.assertEqual(set(matchers[0].split("|")), {"Bash", "Monitor", "WebFetch"})
+
     def test_webfetch(self):
         url = "https://github.com/uellue-bot/skills/pull/2"
         self.assertIsNotNone(guard.decide({"tool_name": "WebFetch", "tool_input": {"url": url}}))
