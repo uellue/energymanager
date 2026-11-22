@@ -1,0 +1,15 @@
+# Acceptance examples
+
+One concrete situation each and what should then be observable. Tests and specifications cite the IDs. Priority: must or should.
+
+| ID | Scenario | Priority | When | Then | Status |
+|---|---|---|---|---|---|
+| E1 | S1 | must | Home Assistant runs with the heat pump, the RCT inverter and battery, the solar forecast and a weather forecast connected | One dashboard shows: outdoor, room, floor supply and hot-water temperature; heat pump energy; solar power; battery state of charge; household load; grid import and export; the solar forecast and the weather forecast for 48 h | [answered] |
+| E2 | S1 | must | A source is unreachable for an hour (e.g. the Daikin cloud) | The dashboard and the recorded data show the gap as missing data, never as a flat or invented value | [answered] |
+| E9 | S1 | should (later) | A source has been unreachable for an hour | The person is alerted. Alerts are secondary to getting the maths and the integration working (principal, 2026-11-21) | [answered] |
+| E3 | S2, S3 | must | The model or the optimizer is run on a recorded test case: recorded measurements and the forecasts recorded at that time | It shows predicted against measured room temperature, floor supply temperature and heat pump energy, with the error; for the optimizer, the outcome is graded against what actually happened. No fixed period | [answered] |
+| E4 | S3 | should | A sunny day follows a cloudy one | The plan moves heat pump operation and the vehicles' charging towards the sunny midday, keeps the floor supply at or below 35 °C and the room within the comfort band, and shows the expected change in grid import. Nothing is written to devices | [answered] |
+| E6 | S1 | must | A solar forecast and a weather forecast are issued every hour for a week | Every issued forecast is kept with its issue time, so that an hour of production can later be compared with what was forecast 1, 6 and 24 h before it (walk p1-collect-and-view, step 7) | [assumed] |
+| E7 | S2 | must | A recorded day is exported as a test case | The test case contains the measurements and the forecasts as issued, in a fixed file format, and loads into Python identically each time, independent of the running Home Assistant (step 10) | [assumed] |
+| E8 | S1 | must | A Daikin outage is mocked without touching the unit | The entities behave as in a real cloud outage (the same states), and the recorded data shows the gap (step 12) | [assumed] |
+| E5 | S1 | should | Several days of solar production, solar forecast and weather forecast have been recorded | Production is shown against both forecasts, so that one can judge whether the weather forecast predicts production better than the solar forecast | [answered] |
