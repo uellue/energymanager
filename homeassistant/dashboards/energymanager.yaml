@@ -96,27 +96,51 @@ views:
       - type: custom:apexcharts-card
         header:
           show: true
-          title: Production against forecasts, 7 days (Wh per hour)
-        graph_span: 7d
+          title: Solar energy per hour (Wh)
+        graph_span: 48h
         span:
           end: hour
+        yaxis:
+          - min: 0
+            decimals: 0
+        apex_config:
+          legend:
+            show: true
         series:
           - entity: sensor.rct_power_storage_all_generators_power
             name: Measured
-            type: column
+            unit: Wh
+            color: "#212121"
+            type: line
+            curve: stepline
+            stroke_width: 2
+            show:
+              legend_value: false
             statistics:
               type: mean
               period: hour
               align: start
           - entity: sensor.forecast_archive_e5
-            name: Solar forecast
+            name: Solar forecast (forecast.solar)
+            unit: Wh
+            color: "#1e88e5"
             type: line
+            curve: stepline
+            stroke_width: 1.5
+            show:
+              legend_value: false
             data_generator: |
               return entity.attributes.hours.map(
                 h => [new Date(h.start).getTime(), h.solar_forecast_wh]);
           - entity: sensor.forecast_archive_e5
-            name: Weather-based (upper estimate)
+            name: Weather-based upper estimate (Open-Meteo)
+            unit: Wh
+            color: "#e53935"
             type: line
+            curve: stepline
+            stroke_width: 1.5
+            show:
+              legend_value: false
             data_generator: |
               return entity.attributes.hours.map(
                 h => [new Date(h.start).getTime(), h.weather_estimate_wh]);
