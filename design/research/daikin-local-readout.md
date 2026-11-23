@@ -51,6 +51,19 @@ A second sub-agent answered the same question independently (a comparison of res
 - **P1P2MQTT:** the README excludes "Older Altherma 3R ECH2O models with a E\*P50D\* code [that] originate from Rotex and use CANbus", and says E\*P50\*E codes use P1/P2 and are supported. Whether EBSXB16P50DF falls under the excluded models remains open.
 - **Settles the accuracy question:** a one-off comparison against a clamp meter or the house's smart meter.
 
+## Additions from the installer reference guide and ESPAltherma v2 (2026-11-22)
+
+A sub-agent read the installer reference guide 4P663482-1C in full and ESPAltherma's `beta` branch; the orchestrator re-checked pages 13, 59, 124, 153 and 160. Tracked in issue uellue-bot/energymanager#11.
+
+- **Correction: ESPAltherma v2 is not read-only.** Under Settings → Experimental (off until ticked) it writes the two points of the weather-dependent curve (leaving water, hot water) and the power limit ([4-08], limit 1) through X10A (`doc/control.md` on `beta`). This unit's hydro software 20007903 is listed "from the boards' software … awaiting a first report". Under AGENTS.md, these writes need an independent review before they run; the readout runs with them off. The table above describes v1.
+- **Telemetry is on by default in v2** ("Help others get their heat pump recognised"): a report with identification codes, readings, model and firmware on model confirmation and after each update, plus a daily heartbeat. Untick it.
+- **Unit counters in v2:** heat produced, compressor hours per mode, pump hours and compressor starts for software 20007903, mapped from the software, not yet compared with a real unit. Electricity per mode only for 20002203.
+- **X10A and the WLAN cartridge use different connectors.** X10A's only documented use is the EKPCCAB4 cable (p. 160). The WLAN cartridge BRP069A78 goes into the card slot of the user interface (p. 153, 295); the WLAN module and the bizone kit are wired to the user interface PCB A11P (p. 298). Whether ESPAltherma's polling disturbs the user interface or cloud traffic is not documented; no report of a conflict was found. ESPAltherma's warning that a bizone kit occupies X10A probably concerns other models (inference).
+- **Access and safety:** the ECH₂O indoor unit always has its own dedicated power supply (p. 124), besides the outdoor unit's; a backup heater may have a third. Switch all off, wait more than 10 minutes and measure below 50 V DC before touching (p. 13). Opening: user interface panel, switch box cover, ground wire on the top cover (p. 83–84). The switch box carries 230 V outputs; keep signal cables more than 5 cm from power cables (p. 298).
+- **Serial settings:** 9600 baud, 8E1, per the maintainer in ESPAltherma issue #40 (2021), not in the README. ESPAltherma's power estimate from current × voltage is written for single-phase units and does not apply as is to this three-phase unit (inference).
+
+Checked on the pilot's unit (photos by the principal, 2026-11-23): X10A on A1P is a 5-pin connector with pin 1 marked, and it is free; the 8-pin X23A next to it is free as well. The display gives the indoor unit's software as "ID0793", which presumably matches ESPAltherma's 20007903 (not confirmed).
+
 ## To check on the unit
 
 - On the hydro PCB A1P in the switch box: the X10A label, whether X10A is free, and whether a bizone kit is fitted.

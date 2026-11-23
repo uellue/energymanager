@@ -42,7 +42,23 @@ Each model below was fitted to, or evaluated against, the nine full-load points 
   - % of Carnot: median 48 (IQR 45–51). For 19 Daikin Altherma 3: 44.5 (43–48).
   - Space-heating COP: median 4.25, Altherma 3: 3.68. Across systems (not within one unit), it falls by about 0.13 per K of mean flow temperature.
 
+Added 2026-11-22 from the data book, p. 22–23 (read by a sub-agent; the values on p. 7–8 and 23 were re-checked by the orchestrator):
+
+- The 6.29 kW, COP 4.01 point at +2 °C is a BAFA point; A7/W35 and A7/W55 are Keymark points. The single-phase ERLA14D2V3 differs at −7/35 °C (9.30 kW, COP 2.86 against 10.50 kW, COP 3.00 for the three-phase W1).
+- Full-load points at low leaving-water temperatures, "measured according to UNI/TS 11300", ERLA14D2 (V3/W1), p. 23. Useful as further fit points; whether they include defrost is not stated.
+
+  | Outdoor | LWT | Capacity kW | COP | LWT | Capacity kW | COP |
+  |---|---|---|---|---|---|---|
+  | −7 °C | 34 | 8.20 | 2.92 | 52 | 8.08 | 1.98 |
+  | +2 °C | 30 | 7.75 | 3.78 | 42 | 7.39 | 2.79 |
+  | +7 °C | 27 | 10.44 | 5.19 | 36 | 12.27 | 4.71 |
+  | +12 °C | 24 | 12.71 | 9.35 | 30 | 13.19 | 6.60 |
+
 ## 2. Part load and cycling
+
+- EN 14825 part-load points, data book p. 7–8, for EBVH16SU23D6V + ERLA14DV3 (single-phase, another indoor unit), average climate, 35 °C, Prated 11 kW: A (−7 °C) 9.8 kW, COP 2.99; B (+2 °C) 6.1 kW, 4.35; C (+7 °C) 4.6 kW, 6.70; D (+12 °C) 5.4 kW, 8.65; SCOP 4.60. At 55 °C: 8.5 / 6.2 / 4.4 / 5.3 kW, COP 1.80 / 3.28 / 4.88 / 6.58.
+- Minimum output, inferred (computed here, not stated by Daikin): the standard's demand at C is 3.8 kW and at D 1.7 kW; the declared capacities are above that, which under EN 14825 means the unit cannot go lower. So the minimum output is about 4.4–4.6 kW at +7 °C and 5.3–5.4 kW at +12 °C, for the EBVH combination. To be measured on the pilot.
+- Settings that bear on cycling (installer reference guide): overshoot [9‑04], 1–4 °C above the setpoint before the compressor stops, is the only space-heating anti-cycling setting (p. 205); the minimum running timer [8‑00] is marked "Do NOT change" (p. 226). No setting sets a minimum compressor output, a minimum off time for space heating, or a maximum number of starts.
 
 - Regulation (EU) 813/2013, Annex I: "if Cdh is not determined by measurement then the default degradation coefficient is Cdh = 0,9". https://legislation.gov.uk/eur/2013/813/annex/I/division/3/adopted
 - The data book declares Cdh = 1.0 at EN 14825 points A–D for the EBVH + ERLA14DV3 combination. A declaration of 1.0 means Daikin claims no cycling loss at those points. Whether this was measured is not stated.
@@ -77,6 +93,7 @@ Each model below was fitted to, or evaluated against, the nine full-load points 
 ## 4. Hot water
 
 - COP at A7: 2.89 at 55 °C leaving water against 4.87 at 35 °C (data book).
+- For exactly EBS(X/H)(B)16P50DF with ERLA D2W1 (data book p. 23, XL tapping cycle): COP_DHW 3.1, efficiency 128 %, 1313 kWh per year in the average climate (colder 2.67 / 1526 kWh, warmer 3.76 / 1078 kWh). This is the only data-book table naming the pilot's indoor unit.
 - HeatpumpMonitor hot-water COP (computed here): median 3.06 at a median water flow temperature of 45 °C; 2.43 for the 19 Altherma 3 units.
 - Valves: ECH₂O has a tank valve M1S and a bypass valve M2S, not a classic 3‑way valve (installer guide, hydraulic legend).
   - Hot-water runs have an anti-recycle timer [8‑02], with a minimum of 0.5 h, and a maximum running time [8‑01].
@@ -96,7 +113,16 @@ Each model below was fitted to, or evaluated against, the nine full-load points 
 - **when2heat** (https://github.com/oruhnau/when2heat, `input/cop/cop_parameters.csv`): COP for air-source units = 6.08 − 0.0941·ΔT + 0.000464·ΔT², times 0.85 for real-world operation. The accompanying paper (Ruhnau et al. 2019, doi:10.1038/s41597-019-0199-y) was not opened.
 - **HeatpumpMonitor.org**: per-system stats and 10 s time series through the API; its 19 Altherma 3 systems are a real-world comparison group.
 
-## 6. Gaps in the pilot's measurements, ranked
+## 6. Levers an optimizer has (installer reference guide, added 2026-11-22)
+
+- Weather-dependent curve [1‑00]–[1‑03] (p. 172–175, 184); in weather-dependent mode the user shifts the leaving water by up to ±10 °C, and schedules hold shift values (p. 182–183).
+- Room thermostat control [C‑07]; modulation [8‑05]/[8‑06] only with it (p. 188, 190).
+- Smart Grid contacts, [D‑01]=3: free running, forced off, recommended on (buffers PV in the tank, or the room under room thermostat control), forced on (p. 148–149, 227–229).
+- Power limit [4‑08], continuous or through four digital inputs on a demand PCB; [5‑05]–[5‑0C] in A or kW (p. 63–64, 230–231).
+- Hot water: heat-pump on hysteresis [6‑00], anti-recycle timer [8‑02] (at least 0.5 h), schedule (p. 207–210, 226).
+- The display's energy figures are estimates (p. 58–59): heat from leaving and entering water temperature and flow; electricity from the outdoor unit's power input, the set backup-heater capacity and the voltage, unless pulse meters on [D‑08]/[D‑09] are fitted. Split by space heating, cooling and hot water, in 2-hour, daily and monthly bins (relevant to issue uellue-bot/energymanager#10).
+
+## 7. Gaps in the pilot's measurements, ranked
 
 The first gap matters most for both control and verification.
 
