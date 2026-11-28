@@ -64,9 +64,9 @@ views:
       - type: entities
         title: Now
         entities:
-          - entity: sensor.sonoff_snzb_02dr2_temperatur
+          - entity: sensor.upper_corridor_temperature
             name: Room (upper floor corridor)
-          - entity: sensor.sonoff_snzb_02dr2_luftfeuchtigkeit
+          - entity: sensor.upper_corridor_humidity
             name: Room humidity
           - entity: sensor.altherma_climatecontrol_aussentemperatur
             name: Outdoor (Daikin)
@@ -105,7 +105,7 @@ views:
         title: Temperatures, 48 h
         hours_to_show: 48
         entities:
-          - entity: sensor.sonoff_snzb_02dr2_temperatur
+          - entity: sensor.upper_corridor_temperature
             name: Room (upper floor corridor)
           - entity: sensor.altherma_climatecontrol_aussentemperatur
             name: Outdoor
