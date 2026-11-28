@@ -9,6 +9,9 @@ services:
     network_mode: host
     environment:
       TZ: Europe/Berlin
+    # The Zigbee coordinator (README, "Home Assistant", ZHA).
+    devices:
+      - ${EM_ZIGBEE_DEVICE:?set in .env}:/dev/ttyACM0
     volumes:
       - ${EM_DATA_DIR:?set in .env}/homeassistant:/config
       # Versioned parts of the configuration (design D3).
