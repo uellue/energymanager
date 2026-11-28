@@ -6,7 +6,10 @@ forecast and Open-Meteo's satellite irradiance of the past day and today so far 
 fetch time and the issue time the service states, to an SQLite database. Once
 per day it also fetches Open-Meteo's historical hourly temperature (first from
 January 2025, then from two weeks before the last successful fetch, since
-Open-Meteo still revises its most recent days). Failed
+Open-Meteo still revises its most recent days). For comparing PV forecast
+sources it also fetches, every hour, Open-Meteo's irradiance forecast on the roof
+plane from three named weather models, and once per day the same models' past
+forecasts (from 2026-08-27 on; spec: model-forecast-archive). Failed
 fetches are kept as well. A read-only HTTP endpoint on 127.0.0.1 serves the
 hourly series that the dashboard compares with measured production (example E5)
 and, as a first try, the weekly electricity cost over outdoor temperature
@@ -41,6 +44,12 @@ HISTORY_REVISE_DAYS = 14  # Open-Meteo still revises the most recent days of its
 SATELLITE_MODEL = "dwd_sis_europe_africa_v4"  # DWD's product from EUMETSAT MTG, Europe
 SATELLITE_VARIABLES = ("shortwave_radiation", "direct_normal_irradiance", "diffuse_radiation",
                        "global_tilted_irradiance")
+# Named weather models, so that each response says which model it came from (requirements S3).
+MODELS = "open-meteo-models"
+PREVIOUS_RUNS = "open-meteo-previous-runs"
+NAMED_MODELS = ("dwd_icon_d2", "dwd_icon_eu", "ecmwf_ifs")
+PREVIOUS_RUNS_START = date(2026, 8, 27)  # the inverter's 5-minute records start
+PREVIOUS_RUNS_OVERLAP_DAYS = 3  # past runs do not change; the overlap covers missed days
 TIMEOUT_S = 30
 
 SCHEMA = """
@@ -105,18 +114,30 @@ def services_from_env(env=os.environ) -> list[Service]:
         "models": SATELLITE_MODEL,
     })
     def history_url(conn: sqlite3.Connection, now: datetime) -> str:
-        """Hourly temperature up to yesterday (UTC): from HISTORY_START until one fetch has
-        succeeded; then from HISTORY_REVISE_DAYS days before the last successful fetch, so that
-        days missed while fetches failed are filled as well."""
-        end = now.astimezone(timezone.utc).date() - timedelta(days=1)
-        (last,) = conn.execute("SELECT max(fetched_at) FROM fetch WHERE service = ? AND error IS NULL",
-                               (HISTORY,)).fetchone()
-        start = HISTORY_START
-        if last is not None:
-            start = max(HISTORY_START, parse_time(last).date() - timedelta(days=HISTORY_REVISE_DAYS))
+        """Hourly temperature up to yesterday (UTC), over daily_range."""
+        start, end = daily_range(conn, HISTORY, now, HISTORY_START, HISTORY_REVISE_DAYS)
         query = urlencode({"latitude": lat, "longitude": lon, "start_date": start.isoformat(),
                            "end_date": end.isoformat(), "hourly": "temperature_2m", "timezone": "UTC"})
         return f"https://archive-api.open-meteo.com/v1/archive?{query}"
+
+    models_query = urlencode({
+        "latitude": lat, "longitude": lon, "models": ",".join(NAMED_MODELS),
+        "hourly": "global_tilted_irradiance", "minutely_15": "global_tilted_irradiance",
+        "tilt": dec, "azimuth": az, "forecast_days": 4, "timezone": "UTC",
+    })
+
+    def previous_runs_url(conn: sqlite3.Connection, now: datetime) -> str:
+        """Past forecasts of the named models up to yesterday (UTC), over daily_range: per hour, the
+        latest run's value and those of the runs one and two days earlier."""
+        start, end = daily_range(conn, PREVIOUS_RUNS, now, PREVIOUS_RUNS_START, PREVIOUS_RUNS_OVERLAP_DAYS)
+        query = urlencode({
+            "latitude": lat, "longitude": lon, "models": ",".join(NAMED_MODELS),
+            "hourly": ",".join(f"global_tilted_irradiance{lead}"
+                               for lead in ("", "_previous_day1", "_previous_day2")),
+            "tilt": dec, "azimuth": az, "start_date": start.isoformat(), "end_date": end.isoformat(),
+            "timezone": "UTC",
+        })
+        return f"https://previous-runs-api.open-meteo.com/v1/forecast?{query}"
 
     return [
         Service(FORECAST_SOLAR,
@@ -127,7 +148,22 @@ def services_from_env(env=os.environ) -> list[Service]:
         Service(SATELLITE, f"https://satellite-api.open-meteo.com/v1/archive?{satellite_query}",
                 no_issue_time),
         Service(HISTORY, history_url, no_issue_time, daily=True),
+        Service(MODELS, f"https://api.open-meteo.com/v1/forecast?{models_query}", no_issue_time),
+        Service(PREVIOUS_RUNS, previous_runs_url, no_issue_time, daily=True),
     ]
+
+
+def daily_range(conn, service: str, now: datetime, first: date, overlap_days: int) -> tuple[date, date]:
+    """The days a daily fetch covers, up to yesterday (UTC): from `first` until one fetch of the
+    service has succeeded; then from `overlap_days` before the last successful fetch, so that days
+    missed while fetches failed are filled as well."""
+    end = now.astimezone(timezone.utc).date() - timedelta(days=1)
+    (last,) = conn.execute("SELECT max(fetched_at) FROM fetch WHERE service = ? AND error IS NULL",
+                           (service,)).fetchone()
+    start = first
+    if last is not None:
+        start = max(first, parse_time(last).date() - timedelta(days=overlap_days))
+    return start, end
 
 
 def connect(path: str) -> sqlite3.Connection:

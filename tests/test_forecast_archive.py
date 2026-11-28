@@ -372,6 +372,71 @@ def collector_store(path: str, days: dict) -> sqlite3.Connection:
 BERLIN = fa.ZoneInfo("Europe/Berlin")
 
 
+ENV = {"EM_LATITUDE": "52.52", "EM_LONGITUDE": "13.41", "EM_DECLINATION": "30",
+       "EM_AZIMUTH": "-10", "EM_KWP": "5"}
+
+
+class NamedModelTest(ArchiveCase):
+    """Spec model-forecast-archive: the forecasts of named models, current and past runs (S3, E18)."""
+
+    def service(self, name):
+        return {s.name: s for s in fa.services_from_env(ENV)}[name]
+
+    def test_current_forecasts_url(self):
+        """Scenario "A day of fetches": hourly, three named models, roof plane, 15-minute steps too."""
+        service = self.service(fa.MODELS)
+        self.assertFalse(service.daily)
+        url = urlsplit(service.url)
+        self.assertEqual(f"{url.scheme}://{url.netloc}{url.path}", "https://api.open-meteo.com/v1/forecast")
+        self.assertEqual(parse_qs(url.query), {
+            "latitude": ["52.52"], "longitude": ["13.41"], "models": ["dwd_icon_d2,dwd_icon_eu,ecmwf_ifs"],
+            "hourly": ["global_tilted_irradiance"], "minutely_15": ["global_tilted_irradiance"],
+            "tilt": ["30"], "azimuth": ["-10"], "forecast_days": ["4"], "timezone": ["UTC"]})
+
+    def test_first_past_runs_fetch_from_august(self):
+        """Scenario "First fetch after deployment": from 2026-08-27 to yesterday, three leads."""
+        service = self.service(fa.PREVIOUS_RUNS)
+        self.assertTrue(service.daily)
+        url = urlsplit(service.url(self.conn, T0))
+        self.assertEqual(f"{url.scheme}://{url.netloc}{url.path}",
+                         "https://previous-runs-api.open-meteo.com/v1/forecast")
+        self.assertEqual(parse_qs(url.query), {
+            "latitude": ["52.52"], "longitude": ["13.41"], "models": ["dwd_icon_d2,dwd_icon_eu,ecmwf_ifs"],
+            "hourly": ["global_tilted_irradiance,global_tilted_irradiance_previous_day1,"
+                       "global_tilted_irradiance_previous_day2"],
+            "tilt": ["30"], "azimuth": ["-10"], "start_date": ["2026-08-27"], "end_date": ["2026-11-01"],
+            "timezone": ["UTC"]})
+
+    def test_past_runs_fill_missed_days(self):
+        """Scenario "Fetches missed for some days": three failed days after a success are covered."""
+        service = self.service(fa.PREVIOUS_RUNS)
+        query = lambda: parse_qs(urlsplit(service.url(self.conn, T0)).query)  # noqa: E731
+        self.conn.execute("INSERT INTO fetch (service, fetched_at, body) VALUES (?, ?, ?)",
+                          (fa.PREVIOUS_RUNS, "2026-10-29T00:02:00+00:00", b"{}"))
+        for d in (30, 31):
+            self.conn.execute("INSERT INTO fetch (service, fetched_at, error) VALUES (?, ?, 'HTTP 500')",
+                              (fa.PREVIOUS_RUNS, fa.iso(datetime(2026, 10, d, 0, 2, tzinfo=timezone.utc))))
+        self.conn.execute("INSERT INTO fetch (service, fetched_at, error) VALUES (?, ?, 'HTTP 500')",
+                          (fa.PREVIOUS_RUNS, "2026-11-01T00:02:00+00:00"))
+        self.assertEqual((query()["start_date"], query()["end_date"]), (["2026-10-26"], ["2026-11-01"]))
+        # Another source's success does not count for this one.
+        self.conn.execute("INSERT INTO fetch (service, fetched_at, body) VALUES (?, ?, ?)",
+                          (fa.HISTORY, "2026-11-01T00:02:00+00:00", b"{}"))
+        self.assertEqual(query()["start_date"], ["2026-10-26"])
+
+    def test_refused_request_leaves_the_others(self):
+        """Scenario "Open-Meteo refuses one request": a failure entry, the other sources kept."""
+        base = f"http://127.0.0.1:{self.fake.server.server_port}"
+        self.fake.status["/satellite"] = 429  # stands in for the named-model source
+        self.fake.services.append(fa.Service(fa.MODELS, base + "/satellite", fa.no_issue_time))
+        self.fake.services = [s for s in self.fake.services if s.name != fa.SATELLITE]
+        self.run_hours(1)
+        self.assertEqual(self.conn.execute("SELECT http_status, error FROM fetch WHERE service = ?",
+                                           (fa.MODELS,)).fetchone(), (429, "HTTP 429"))
+        self.assertEqual(self.count(fa.FORECAST_SOLAR, "error IS NULL"), 1)
+        self.assertEqual(self.count(fa.OPEN_METEO, "error IS NULL"), 1)
+
+
 class HistoryTest(ArchiveCase):
     """E20: Open-Meteo's historical temperature, fetched once a day and kept as fetched."""
 
