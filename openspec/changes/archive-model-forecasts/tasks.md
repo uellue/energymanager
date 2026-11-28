@@ -11,7 +11,7 @@
 
 ## 3. On the PC
 
-- [ ] 3.1 Test deploy; after the first run, both services have a successful fetch; the past-runs response covers 2026-08-27 to yesterday with one-day-ahead values for all three models. Verify: a query on the archive's database, output in the hand-over.
+- [x] 3.1 Test deploy; after the first run, both services have a successful fetch; the past-runs response covers 2026-08-27 to yesterday with one-day-ahead values for all three models. Verify: a query on the archive's database, output in the hand-over. Done 2026-11-28 on a test deploy of this branch: both HTTP 200; past runs 2026-08-27 00:00 to 2026-11-27 23:00, 2232 of 2232 hours for every series except ICON-D2 two days ahead (none, as expected), 140 kB; current forecasts 16 kB, ICON-D2 55 h, the others 96 h.
 
 ## 4. Hallway test
 

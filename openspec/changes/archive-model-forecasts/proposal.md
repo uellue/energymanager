@@ -38,5 +38,5 @@ Serves E18 (should) as an input; no must-example. E18 has no scenario of its own
 - `archive/forecast_archive.py`: two more services in `services_from_env`; no new table.
 - `tests/test_forecast_archive.py`: the new URLs and the daily range.
 - README: the archive section lists the new sources.
-- Archive size, estimated from the number of values, not measured: about 60 kB per hourly response, so about 1.5 MB a day; the first past-runs response about 1 MB. Task 3.1 measures it.
+- Archive size, measured on the first fetches: 16 kB per hourly response, so about 0.4 MB a day; the first past-runs response 140 kB.
 - No new dependency. Nothing writes to a device.

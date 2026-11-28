@@ -26,7 +26,7 @@ The forecast archive (`archive/forecast_archive.py`) fetches each source in `ser
 
 - [Open-Meteo counts a long request as several calls] → The first past-runs request (about 95 days) counts as a few calls of the 10,000 a day; the hourly requests are small.
 - [All four Open-Meteo sources share one provider and one transposition] → Differences in the transposition stay invisible; an independent source (MOSMIX) is a later change.
-- [Archive growth of about 1.5 MB a day] → Acceptable on the PC; the backups by hand get larger.
+- [Archive growth of about 0.4 MB a day] → Acceptable on the PC; the backups by hand get larger.
 
 ## Migration Plan
 
